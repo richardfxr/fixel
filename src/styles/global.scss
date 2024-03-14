@@ -1,0 +1,15 @@
+// SCSS file containing global styling
+// used in routes/+layout.svelte
+
+// === USE ====================================
+@use 'variables' as *;
+
+/* ============================================
+   GLOBAL
+   ============================================ */
+
+body {
+    color: var(--clr-1000);
+    font-family: sans-serif;
+    background-color: var(--clr-bg);
+}

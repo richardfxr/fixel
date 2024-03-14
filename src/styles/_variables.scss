@@ -1,0 +1,33 @@
+// Partial SCSS file containing variables
+
+// === USE ====================================
+@use 'colors' as *;
+
+/* ============================================
+   VARIABLES
+   ============================================ */
+
+// === SASS VARIABLES =========================
+
+:root {
+    /* === CSS VARIABLES ====================== */
+
+    /* === COLORS ============================= */
+    /* light theme (default) */
+    // parse $light into CSS variables
+    @each $name, $value in $light {
+        --clr-#{$name}: #{$value};
+    }
+    color-scheme: light;
+}
+
+/* === COLOR SCHEMES ====================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* dark theme */
+        @each $name, $value in $dark {
+            --clr-#{$name}: #{$value};
+        }
+        color-scheme: dark;
+    }
+}
