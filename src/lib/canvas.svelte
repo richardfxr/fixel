@@ -1,6 +1,7 @@
 <script lang="ts">
     /* === IMPORTS ============================ */
     import { onMount } from 'svelte';
+    import type { Mode } from '../routes/canvas/+page.svelte';
 
     /* === TYPES ============================== */
     type Pointer = {
@@ -13,6 +14,7 @@
     export let width: number;
     export let height: number;
     export let image: Uint8ClampedArray; // bind
+    export let mode: Mode;
 
     /* === CONSTANTS ========================== */
     const panXSensitivity = 1;
@@ -85,6 +87,25 @@
         scale = newScale
     }
 
+    function drag(event: PointerEvent): void {
+        if (
+            draggingPointer &&
+            event.pointerId === draggingPointer.id
+        ) {
+            // the pointer is dragging, update translates (position)
+            translate(
+                panXSensitivity * (event.clientX - draggingPointer.x),
+                panYSensitivity * (event.clientY - draggingPointer.y)
+            );
+            draggingPointer = copyPointerEvent(event);
+        }
+    }
+
+    function renderNewImage(): void {
+        imageData.data.set(image);
+        context.putImageData(imageData, 0, 0);
+    }
+
     /* === EVENT HANDLES ====================== */
     function handleResize(): void {
         // update width and height
@@ -115,6 +136,38 @@
         // update pointer object in ongoingPointers
         ongoingPointers.splice(pointerIndex, 1, copyPointerEvent(event));
 
+        switch (mode) {
+            case "draw":
+                handleDrawMode(event);
+                break;
+            case "move":
+                handleMoveMode(event);
+                break;
+        }
+    }
+
+    function handleDrawMode(event: PointerEvent): void {
+        // get the (x, y) pixel position of the pointer relative to the image
+        const imageX = Math.floor((((event.clientX - translateX) - (containerWidth / 2)) / scale) + width / 2);
+        const imageY = Math.floor((((event.clientY - translateY) - (containerHeight / 2)) / scale) + height / 2);
+
+        // return if pointer is outside the image
+        if (
+            imageX < 0 || imageX >= width ||
+            imageY < 0 || imageY >= height
+        ) return;
+
+        // update image
+        const imageIndex = imageX + width * imageY;
+        image[imageIndex * 4] = 255;
+        image[imageIndex * 4 + 1] = 0;
+        image[imageIndex * 4 + 2] = 0;
+        image[imageIndex * 4 + 3] = 255;
+
+        renderNewImage();
+    }
+
+    function handleMoveMode(event: PointerEvent): void {
         if (ongoingPointers.length === 2) {
             // two pointers are present, starting pinch zoom gesture
             // calculate the distance between them and the center point
@@ -149,29 +202,17 @@
             return;
         }
 
-        if (
-            draggingPointer &&
-            event.pointerId === draggingPointer.id
-        ) {
-            // the pointer is dragging, update translates (position)
-            translate(
-                panXSensitivity * (event.clientX - draggingPointer.x),
-                panYSensitivity * (event.clientY - draggingPointer.y)
-            );
-            draggingPointer = copyPointerEvent(event);
-        }
+        drag(event);
     }
 
     function handleUp(event: PointerEvent): void {
-        if (
-            draggingPointer &&
-            event.pointerId === draggingPointer.id
-        ) {
-            // the pointer was dragging, update translates (position)
-            translate(
-                panXSensitivity * (event.clientX - draggingPointer.x),
-                panYSensitivity * (event.clientY - draggingPointer.y)
-            );
+        switch (mode) {
+            case "draw":
+                handleDrawMode(event);
+                break;
+            case "move":
+                drag(event);
+                break;
         }
 
         handleCancel(event);
@@ -252,8 +293,7 @@
         canvas.height = height;
         canvas.width = width;
         imageData = context.getImageData(0, 0, width, height);
-        imageData.data.set(image);
-        context.putImageData(imageData, 0, 0);
+        renderNewImage();
 
         // create resizeObserver
         const resizeObserver = new ResizeObserver(handleResize);
