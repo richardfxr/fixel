@@ -1,11 +1,20 @@
+<script lang="ts" context="module">
+    /* === TYPES ============================== */
+    export type Mode = "draw" | "move";
+</script>
+
 <script lang="ts">
     /* === IMPORTS ============================ */
     import Canvas from "$lib/canvas.svelte";
+    import CanvasControls from "$lib/canvasControls.svelte";
 
     /* === CONSTANTS ========================== */
-    const width = 6;
-    const height = 6;
+    const width = 9;
+    const height = 9;
+
+    /* === VARIABLES ========================== */
     let image = generateGrid(width, height);
+    let mode: Mode = "draw";
 
     /* === FUNCTIONS ========================== */
     function generateGrid(width: number, height: number): Uint8ClampedArray {
@@ -23,16 +32,21 @@
 
 
 <main>
+    <CanvasControls
+        bind:mode={mode} />
+    
     <Canvas
         {width}
         {height}
-        bind:image={image} />
+        bind:image={image}
+        {mode} />
 </main>
 
 
 
 <style lang="scss">
     main {
+        color: black;
         background-color: white;
     }
 </style>
