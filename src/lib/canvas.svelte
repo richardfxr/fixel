@@ -9,62 +9,27 @@
         y: number
     };
 
+    /* === PROPS ============================== */
+    export let width: number;
+    export let height: number;
+    export let image: Uint8ClampedArray; // bind
+
     /* === CONSTANTS ========================== */
     const panXSensitivity = 1;
     const panYSensitivity = 1;
     const pinchZoomSensitivity = 0.23;
     const mouseZoomCoefficient = -1;
     const mouseZoomLimit = 7;
-    const scrollXCoefficient = 0.9;
-    const scrollYCoefficient = 0.9;
+    const scrollXCoefficient = -0.9;
+    const scrollYCoefficient = -0.9;
     const zoomWithCtrl = true;
     const ongoingPointers: Pointer[] = [];
-    const imageWidth = 6;
-    const imageHeight = 6;
     const scaleMin = 10;
     const scaleMax = 100;
-    const image = new Uint8ClampedArray([
-        0, 0, 0, 255,
-        51, 0, 0, 255,
-        102, 0, 0, 255,
-        153, 0, 0, 255,
-        204, 0, 0, 255,
-        255, 0, 0, 255,
-        0, 51, 0, 255,
-        51, 51, 0, 255,
-        102, 51, 0, 255,
-        153, 51, 0, 255,
-        204, 51, 0, 255,
-        255, 51, 0, 255,
-        0, 102, 0, 255,
-        51, 102, 0, 255,
-        102, 102, 0, 255,
-        153, 102, 0, 255,
-        204, 102, 0, 255,
-        255, 102, 0, 255,
-        0, 153, 0, 255,
-        51, 153, 0, 255,
-        102, 153, 0, 255,
-        153, 153, 0, 255,
-        204, 153, 0, 255,
-        255, 153, 0, 255,
-        0, 204, 0, 255,
-        51, 204, 0, 255,
-        102, 204, 0, 255,
-        153, 204, 0, 255,
-        204, 204, 0, 255,
-        255, 204, 0, 255,
-        0, 255, 0, 255,
-        51, 255, 0, 255,
-        102, 255, 0, 255,
-        153, 255, 0, 255,
-        204, 255, 0, 255,
-        255, 255, 0, 255,
-    ]);
 
     /* === VARIABLES ========================== */
-    let width = 100;
-    let height = 100;
+    let containerWidth = 100;
+    let containerHeight = 100;
     let scale = 50;
     let translateX = 0;
     let translateY = 0;
@@ -97,13 +62,13 @@
     function translate(translateXDiff: number, translateYDiff: number): void {
         translateX = clamp(
             translateX + translateXDiff,
-            -1 * (width / 2 - 1),
-            width / 2 - 1
+            -1 * (containerWidth / 2 - 1),
+            containerWidth / 2 - 1
         );
         translateY = clamp(
             translateY + translateYDiff,
-            -1 * (height / 2 - 1),
-            height / 2 - 1
+            -1 * (containerHeight / 2 - 1),
+            containerHeight / 2 - 1
         );
     }
 
@@ -113,8 +78,8 @@
         // adds addtional translates so that the scale transform appear to be centered
         // on point (pointX, pointY)
         translate(
-            -1 * ((pointX - width / 2) - translateX) / scale * (newScale - scale),
-            -1 * ((pointY - height / 2) - translateY) / scale * (newScale - scale)
+            -1 * ((pointX - containerWidth / 2) - translateX) / scale * (newScale - scale),
+            -1 * ((pointY - containerHeight / 2) - translateY) / scale * (newScale - scale)
         );
 
         scale = newScale
@@ -123,8 +88,8 @@
     /* === EVENT HANDLES ====================== */
     function handleResize(): void {
         // update width and height
-        width = container.clientWidth;
-        height = container.clientHeight;
+        containerWidth = container.clientWidth;
+        containerHeight = container.clientHeight;
 
         // apply transition to ensure image stays in view
         translate(0, 0);
@@ -284,9 +249,9 @@
         }
 
         // get and load imageData
-        canvas.height = imageHeight;
-        canvas.width = imageWidth;
-        imageData = context.getImageData(0, 0, imageWidth, imageHeight);
+        canvas.height = height;
+        canvas.width = width;
+        imageData = context.getImageData(0, 0, width, height);
         imageData.data.set(image);
         context.putImageData(imageData, 0, 0);
 
