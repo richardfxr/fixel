@@ -311,7 +311,8 @@
 <svelte:window on:pointermove={handleMove} />
 
 <div
-    class="container"
+    class="container {mode}"
+    class:dragging={draggingPointer !== null}
     bind:this={container}
     on:wheel={handleWheel}
     on:pointerenter={handleEnter}
@@ -338,6 +339,18 @@
 
         touch-action: none;
         overflow: hidden;
+
+        &.draw {
+            cursor: crosshair;
+        }
+
+        &.move {
+            cursor: grab;
+
+            &.dragging {
+                cursor: grabbing;
+            }
+        }
     }
 
     .scalor {
