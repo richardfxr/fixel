@@ -1,7 +1,7 @@
 <script lang="ts">
     /* === IMPORTS ============================ */
     import { onMount } from 'svelte';
-    import type { Mode } from '../routes/canvas/+page.svelte';
+    import type { Mode, Color } from '../routes/canvas/+page.svelte';
 
     /* === TYPES ============================== */
     type Pointer = {
@@ -15,6 +15,7 @@
     export let height: number;
     export let image: Uint8ClampedArray; // bind
     export let mode: Mode;
+    export let color: Color;
 
     /* === CONSTANTS ========================== */
     const panXSensitivity = 1;
@@ -159,10 +160,9 @@
 
         // update image
         const imageIndex = imageX + width * imageY;
-        image[imageIndex * 4] = 255;
-        image[imageIndex * 4 + 1] = 0;
-        image[imageIndex * 4 + 2] = 0;
-        image[imageIndex * 4 + 3] = 255;
+        image[imageIndex * 4] = color[0];
+        image[imageIndex * 4 + 1] = color[1];
+        image[imageIndex * 4 + 2] = color[2];
 
         renderNewImage();
     }
