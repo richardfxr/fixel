@@ -31,11 +31,14 @@
     const scaleMax = 100;
 
     /* === VARIABLES ========================== */
+    let newImage = true;
     let containerWidth = 100;
     let containerHeight = 100;
     let scale = 50;
+    let newScale = true;
     let translateX = 0;
     let translateY = 0;
+    let newTranslate = true;
     let draggingPointer: Pointer | null = null;
     let previousPinchDistance = -1;
 
@@ -73,12 +76,12 @@
             -1 * (containerHeight / 2 - 1),
             containerHeight / 2 - 1
         );
+        newTranslate = true;
     }
 
     function scaleBy(scaleDiff: number): void {
         scale = clamp(scale + scaleDiff, scaleMin, scaleMax);
-        canvas.style.width = width * scale + "px";
-        canvas.style.height = height * scale + "px";
+        newScale = true;
     }
 
     function scaleOnPoint(scaleDiff: number, pointX: number, pointY: number): void {
@@ -107,9 +110,22 @@
         }
     }
 
-    function renderNewImage(): void {
-        imageData.data.set(image);
-        context.putImageData(imageData, 0, 0);
+    function updateCanvas(): void {
+        if (newImage) {
+            imageData.data.set(image);
+            context.putImageData(imageData, 0, 0);
+            newImage = false;
+        }
+        if (newScale) {
+            canvas.style.width = width * scale + "px";
+            canvas.style.height = height * scale + "px";
+            newScale = false;
+        }
+        if (newTranslate) {
+            canvas.style.transform = `translate(${translateX}px, ${translateY}px)`;
+            newTranslate = false;
+        }
+        window.requestAnimationFrame(updateCanvas);
     }
 
     /* === EVENT HANDLES ====================== */
@@ -169,7 +185,7 @@
         image[imageIndex * 4 + 1] = color[1];
         image[imageIndex * 4 + 2] = color[2];
 
-        renderNewImage();
+        newImage = true;
     }
 
     function handleMoveMode(event: PointerEvent): void {
@@ -298,15 +314,13 @@
         canvas.height = height;
         canvas.width = width;
         imageData = context.getImageData(0, 0, width, height);
-        renderNewImage();
 
         // create resizeObserver
         const resizeObserver = new ResizeObserver(handleResize);
         resizeObserver.observe(container);
 
-        // apply initial scale
-        canvas.style.width = width * scale + "px";
-        canvas.style.height = height * scale + "px";
+        // call requestAnimationFrame
+        window.requestAnimationFrame(updateCanvas);
 
         return () => {
             // disconnect resizeObserver on destroy
@@ -328,11 +342,7 @@
     on:pointerdown={handleDown}
     on:pointerup={handleUp}
     on:pointercancel={handleCancel}>
-    <div
-        class="scalor"
-        style="transform: translate({translateX}px, {translateY}px);">
-        <canvas bind:this={canvas}></canvas>
-    </div>
+    <canvas bind:this={canvas}></canvas>
 </div>
 
 
@@ -362,14 +372,8 @@
         }
     }
 
-    .scalor {
-        transform-origin: center;
-        image-rendering: pixelated;
-    }
-
     canvas {
         display: block;
-        width: 9px;
-        height: 9px;
+        image-rendering: pixelated;
     }
 </style>
