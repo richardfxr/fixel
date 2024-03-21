@@ -62,7 +62,7 @@
         return ongoingPointers.findIndex(element => element.id === pointer.pointerId);
     }
 
-    function translate(translateXDiff: number, translateYDiff: number): void {
+    function translateBy(translateXDiff: number, translateYDiff: number): void {
         translateX = clamp(
             translateX + translateXDiff,
             -1 * (containerWidth / 2 - 1),
@@ -75,17 +75,22 @@
         );
     }
 
+    function scaleBy(scaleDiff: number): void {
+        scale = clamp(scale + scaleDiff, scaleMin, scaleMax);
+        canvas.style.width = width * scale + "px";
+        canvas.style.height = height * scale + "px";
+    }
+
     function scaleOnPoint(scaleDiff: number, pointX: number, pointY: number): void {
-        const newScale = clamp(scale + scaleDiff, scaleMin, scaleMax);
+        const oldScale = scale;
+        scaleBy(scaleDiff);
 
         // adds addtional translates so that the scale transform appear to be centered
         // on point (pointX, pointY)
-        translate(
-            -1 * ((pointX - containerWidth / 2) - translateX) / scale * (newScale - scale),
-            -1 * ((pointY - containerHeight / 2) - translateY) / scale * (newScale - scale)
+        translateBy(
+            -1 * ((pointX - containerWidth / 2) - translateX) / oldScale * (scale - oldScale),
+            -1 * ((pointY - containerHeight / 2) - translateY) / oldScale * (scale - oldScale)
         );
-
-        scale = newScale
     }
 
     function drag(event: PointerEvent): void {
@@ -94,7 +99,7 @@
             event.pointerId === draggingPointer.id
         ) {
             // the pointer is dragging, update translates (position)
-            translate(
+            translateBy(
                 panXSensitivity * (event.clientX - draggingPointer.x),
                 panYSensitivity * (event.clientY - draggingPointer.y)
             );
@@ -114,7 +119,7 @@
         containerHeight = container.clientHeight;
 
         // apply transition to ensure image stays in view
-        translate(0, 0);
+        translateBy(0, 0);
     }
 
     function handleEnter(event: PointerEvent): void {
@@ -179,7 +184,7 @@
             if (draggingPointer && draggingPointer.id === -1) {
                 // the point between the two pointers is dragging
                 // update translates (position)
-                translate(
+                translateBy(
                     panXSensitivity * (centerX - draggingPointer.x),
                     panYSensitivity * (centerY - draggingPointer.y)
                 );
@@ -262,14 +267,14 @@
             // scroll wheel scrolling
             // or trackpad panning with two fingers
             // ALT key switches X and Y axis
-            translate(
+            translateBy(
                 scrollXCoefficient * event.deltaY,
                 scrollYCoefficient * event.deltaX
             );
         } else {
             // scroll wheel scrolling
             // or trackpad panning with two fingers
-            translate(
+            translateBy(
                 scrollXCoefficient * event.deltaX,
                 scrollYCoefficient * event.deltaY
             );
@@ -299,6 +304,10 @@
         const resizeObserver = new ResizeObserver(handleResize);
         resizeObserver.observe(container);
 
+        // apply initial scale
+        canvas.style.width = width * scale + "px";
+        canvas.style.height = height * scale + "px";
+
         return () => {
             // disconnect resizeObserver on destroy
             resizeObserver.disconnect();
@@ -321,7 +330,7 @@
     on:pointercancel={handleCancel}>
     <div
         class="scalor"
-        style="transform: scale({scale}) translate({translateX / scale}px, {translateY / scale}px);">
+        style="transform: translate({translateX}px, {translateY}px);">
         <canvas bind:this={canvas}></canvas>
     </div>
 </div>
@@ -360,5 +369,7 @@
 
     canvas {
         display: block;
+        width: 9px;
+        height: 9px;
     }
 </style>
